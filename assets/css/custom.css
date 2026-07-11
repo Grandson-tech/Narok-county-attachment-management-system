@@ -1,0 +1,337 @@
+.auth-page {
+    min-height: 100vh;
+    padding: 2rem;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle at 15% 15%, #d1fae5 0, transparent 32%), radial-gradient(circle at 88% 80%, #fde68a 0, transparent 28%), #f1f5f9
+}
+
+.auth-home {
+    position: fixed;
+    top: 1.25rem;
+    left: 1.5rem;
+    color: #0f5c3a;
+    font-weight: 700;
+    font-size: .875rem
+}
+
+.auth-shell {
+    position: relative;
+    width: min(100%, 1100px);
+    min-height: 670px;
+    overflow: hidden;
+    border-radius: 1.5rem;
+    background: #fff;
+    box-shadow: 0 24px 60px #0f172a26
+}
+
+.auth-forms {
+    display: flex;
+    width: 200%;
+    height: 100%;
+    min-height: 670px;
+    transition: transform .7s cubic-bezier(.2, .9, .2, 1)
+}
+
+.auth-form-pane {
+    width: 50%;
+    display: grid;
+    place-items: center;
+    padding: 2.5rem 15% 2.5rem 5%
+}
+
+.auth-signup {
+    padding: 2.5rem 5% 2.5rem 15%
+}
+
+.auth-form-content {
+    width: 100%;
+    max-width: 360px
+}
+
+.auth-signup-content {
+    max-width: 460px
+}
+
+.auth-kicker {
+    margin: 0;
+    color: #0f5c3a;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    font-size: .75rem;
+    font-weight: 800
+}
+
+.auth-form-content h1 {
+    margin: .5rem 0;
+    font-size: 2rem;
+    line-height: 1.1
+}
+
+.auth-subtitle {
+    color: #64748b;
+    font-size: .9rem;
+    line-height: 1.5
+}
+
+.auth-form {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.5rem
+}
+
+.auth-form label {
+    display: grid;
+    gap: .4rem;
+    font-size: .8rem;
+    font-weight: 700;
+    color: #334155
+}
+
+.auth-form input,
+.auth-form select {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: .55rem;
+    padding: .7rem .8rem;
+    background: #fff;
+    font: inherit;
+    font-weight: 400;
+    outline: none
+}
+
+.auth-form input:focus,
+.auth-form select:focus {
+    border-color: #0f5c3a;
+    box-shadow: 0 0 0 3px #d1fae5
+}
+
+.auth-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .8rem
+}
+
+.auth-grid .wide {
+    grid-column: span 2
+}
+
+.auth-check {
+    grid-template-columns: auto 1fr;
+    align-items: start;
+    font-weight: 400 !important
+}
+
+.auth-primary {
+    border: 0;
+    border-radius: .55rem;
+    padding: .8rem 1rem;
+    background: #0f5c3a;
+    color: #fff;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .2s, background .2s
+}
+
+.auth-primary:hover {
+    background: #0b4a2f;
+    transform: translateY(-1px)
+}
+
+.auth-primary:disabled {
+    opacity: .6;
+    cursor: not-allowed
+}
+
+.auth-link {
+    color: #0f5c3a;
+    font-size: .85rem;
+    font-weight: 700
+}
+
+.auth-alert {
+    margin-top: 1rem;
+    border: 1px solid;
+    border-radius: .55rem;
+    padding: .75rem;
+    font-size: .8rem
+}
+
+.auth-alert-error {
+    border-color: #fecaca;
+    background: #fef2f2;
+    color: #991b1b
+}
+
+.auth-alert-success {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+    color: #166534
+}
+
+.auth-panel {
+    position: absolute;
+    z-index: 2;
+    inset: 0 auto 0 50%;
+    width: 50%;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: linear-gradient(135deg, #064e3b, #0f5c3a 52%, #b8860b);
+    color: #fff;
+    transition: transform .7s cubic-bezier(.2, .9, .2, 1), background .7s
+}
+
+.auth-panel:before {
+    content: "";
+    position: absolute;
+    width: 28rem;
+    height: 28rem;
+    border: 1px solid #ffffff30;
+    border-radius: 999px;
+    transform: translate(30%, -35%)
+}
+
+.auth-panel-copy {
+    position: absolute;
+    z-index: 1;
+    width: min(80%, 360px);
+    text-align: center;
+    transition: opacity .35s, transform .7s
+}
+
+.auth-panel-signup {
+    opacity: 0;
+    transform: translateX(2rem)
+}
+
+.auth-panel h2 {
+    margin: 1rem 0 .5rem;
+    font-size: 2rem
+}
+
+.auth-panel p {
+    line-height: 1.55;
+    color: #ecfdf5
+}
+
+.auth-mark {
+    display: grid;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin: auto;
+    border-radius: 999px;
+    background: #fff;
+    color: #0f5c3a;
+    font-weight: 900
+}
+
+.auth-outline {
+    margin-top: 1.5rem;
+    border: 1px solid #fff;
+    border-radius: 999px;
+    padding: .7rem 1.5rem;
+    background: #ffffff12;
+    color: #fff;
+    font-weight: 800;
+    cursor: pointer
+}
+
+.auth-shell.is-signup .auth-forms {
+    transform: translateX(-50%)
+}
+
+.auth-shell.is-signup .auth-panel {
+    transform: translateX(-100%);
+    background: linear-gradient(135deg, #14532d, #0f5c3a 50%, #d4a72c)
+}
+
+.auth-shell.is-signup .auth-panel-signin {
+    opacity: 0;
+    transform: translateX(-2rem)
+}
+
+.auth-shell.is-signup .auth-panel-signup {
+    opacity: 1;
+    transform: translateX(0)
+}
+
+@media(max-width:800px) {
+    .auth-page {
+        padding: 1rem
+    }
+
+    .auth-home {
+        position: static;
+        margin-bottom: 1.5rem
+    }
+
+    .auth-shell {
+        min-height: 0
+    }
+
+    .auth-forms {
+        width: 100%;
+        min-height: 0
+    }
+
+    .auth-form-pane {
+        width: 100%;
+        padding: 2rem
+    }
+
+    .auth-signup {
+        display: none
+    }
+
+    .auth-panel {
+        position: static;
+        width: 100%;
+        min-height: 210px;
+        transform: none !important
+    }
+
+    .auth-panel-signup {
+        display: none
+    }
+
+    .auth-shell.is-signup .auth-signin {
+        display: none
+    }
+
+    .auth-shell.is-signup .auth-signup {
+        display: grid
+    }
+
+    .auth-shell.is-signup .auth-forms {
+        transform: none
+    }
+
+    .auth-grid {
+        grid-template-columns: 1fr
+    }
+
+    .auth-grid .wide {
+        grid-column: auto
+    }
+
+    .auth-shell.is-signup .auth-panel-signin {
+        display: none
+    }
+
+    .auth-shell.is-signup .auth-panel-signup {
+        display: block;
+        opacity: 1;
+        transform: none
+    }
+}
+
+@media(prefers-reduced-motion:reduce) {
+
+    .auth-forms,
+    .auth-panel,
+    .auth-panel-copy {
+        transition: none
+    }
+}

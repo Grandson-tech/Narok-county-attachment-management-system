@@ -3,7 +3,7 @@ import { supabase } from './supabase.js';
 const form = document.querySelector('#upload-form');
 const list = document.querySelector('#documents-list');
 const alertBox = document.querySelector('#alert');
-const submitButton = form.querySelector('button[type="submit"]');
+const submitButton = form.querySelector('button[type="submit"], button:not([type])');
 let user;
 
 const label = (value) => value === 'application_letter' ? 'Acceptance letter' : value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -32,7 +32,7 @@ form.addEventListener('submit', async (event) => {
   try {
     const values = new FormData(form); const file = values.get('file'); const documentType = 'application_letter';
     if (!file || file.size > 10 * 1024 * 1024) { flash('Choose a file that is 10 MB or smaller.', true); return; }
-    const { data: existing, error: checkError } = await supabase.from('documents').select('id').eq('document_type', documentType).limit(1);
+    const { data: existing, error: checkError } = await supabase.from('documents').select('id').eq('student_id', user.id).eq('document_type', documentType).limit(1);
     if (checkError) { flash('Unable to check for an existing letter.', true); return; }
     if (existing.length) { flash('An acceptance letter has already been sent. You cannot send another one.', true); return; }
     const path = `${user.id}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
@@ -41,6 +41,9 @@ form.addEventListener('submit', async (event) => {
     const { error: databaseError } = await supabase.from('documents').insert({ student_id: user.id, document_type: documentType, file_name: file.name, file_path: path, file_size: file.size, mime_type: file.type });
     if (databaseError) { await supabase.storage.from('student-documents').remove([path]); flash(databaseError.message, true); return; }
     form.reset(); flash('Acceptance letter sent successfully. Its status is Pending until HR reviews it.'); await loadDocuments();
+  } catch (error) {
+    console.error('Document upload failed:', error);
+    flash('Upload failed unexpectedly. Please try again or contact support.', true);
   } finally { submitButton.disabled = false; submitButton.textContent = 'Upload acceptance letter'; }
 });
 document.querySelectorAll('[data-sign-out]').forEach((button) => button.addEventListener('click', async () => { await supabase.auth.signOut(); location.assign('../index.html'); }));

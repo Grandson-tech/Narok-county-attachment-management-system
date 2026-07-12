@@ -22,6 +22,8 @@ layoutStyles.textContent = `
   #admin-nav.mobile-open a { margin-bottom: 0; background: rgba(255, 255, 255, 0.08); }
   #admin-nav.mobile-open button.mobile-nav-link { text-align: left; }
   #admin-nav a:hover, #admin-nav button.mobile-nav-link:hover, header.site-header button:hover, header.site-header a:hover { background: rgba(255,255,255,0.14); }
+  .admin-header-actions { display: flex; align-items: center; gap: 0.75rem; }
+  #admin-nav .mobile-signout { display: none; }
   .header-signout:hover { background: rgba(255,255,255,0.12); }
   body > header nav { overflow-x: hidden !important; }
   /* Desktop: restore nav to normal flow inside header */
@@ -30,9 +32,13 @@ layoutStyles.textContent = `
     header.site-header { position: fixed; }
     #admin-nav { position: static; max-height: none; opacity: 1; transform: none; pointer-events: auto; display: flex !important; flex-direction: row; align-items: center; gap: 1.25rem; background: transparent; border-bottom: none; }
     #admin-nav a, #admin-nav button.mobile-nav-link { display: inline-block; margin-bottom: 0; }
+    #admin-nav .mobile-signout { display: none !important; }
     .nav-overlay { display: none !important; }
     /* Reduce header padding on larger screens to keep it compact */
     header.site-header > div { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+  }
+  @media (max-width: 1023px) {
+    header.site-header .header-signout { display: none !important; }
   }
   @media (min-width: 1536px) { body > main { padding-left: 4rem !important; padding-right: 4rem !important; } }
   @media (max-width: 1280px) { #stat-cards { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; } }
@@ -41,6 +47,8 @@ layoutStyles.textContent = `
   /* Mobile polish: tighter header and responsive action layout */
   @media (max-width: 640px) {
     header.site-header > div { padding-top: 0.45rem; padding-bottom: 0.45rem; }
+    header.site-header .admin-brand { order: 1; min-width: 0; }
+    header.site-header .admin-header-actions { order: 2; flex-shrink: 0; }
     header.site-header .grid { height: 2rem !important; width: 2rem !important; }
     header.site-header .grid { font-size: 0.7rem !important; }
     header.site-header a span { line-height: 1; }
@@ -115,8 +123,8 @@ function ensureHeaderInjected(){
     const headerHtml = `
   <header class="site-header border-b border-emerald-900 bg-county-green text-white">
     <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
-      <a href="../index.html" class="flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-full bg-white text-xs font-bold text-county-green">NC</span><span><span class="block font-bold">Narok County</span><span class="block text-xs text-emerald-100">Attachment Management System</span></span></a>
-      <div class="flex items-center gap-3">
+      <a href="../index.html" class="admin-brand flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-full bg-white text-xs font-bold text-county-green">NC</span><span><span class="block font-bold">Narok County</span><span class="block text-xs text-emerald-100">Attachment Management System</span></span></a>
+      <div class="admin-header-actions">
         <button id="admin-menu-toggle" aria-expanded="false" aria-controls="admin-nav" class="lg:hidden rounded-md border border-white/30 px-3 py-2 text-sm font-semibold hover:bg-white/10">☰ Menu</button>
         <button data-sign-out class="header-signout hidden lg:inline-flex rounded-md border border-white/30 px-3 py-2 text-sm font-semibold hover:bg-white/10">Sign out</button>
       </div>
@@ -132,6 +140,18 @@ function ensureHeaderInjected(){
     header = document.querySelector('header.site-header');
   }
 
+  const headerBar = header?.querySelector(':scope > div');
+  const brand = headerBar?.querySelector('a');
+  if (brand) brand.classList.add('admin-brand');
+  let actionGroup = headerBar?.querySelector('.admin-header-actions');
+  if (!actionGroup && headerBar) {
+    actionGroup = document.createElement('div');
+    actionGroup.className = 'admin-header-actions';
+    const headerSignOut = headerBar.querySelector('.header-signout, [data-sign-out]');
+    if (headerSignOut) actionGroup.appendChild(headerSignOut);
+    headerBar.appendChild(actionGroup);
+  }
+
   adminNav = document.querySelector('#admin-nav');
   if (!adminNav && header) {
     const existingNav = header.querySelector('nav');
@@ -143,7 +163,6 @@ function ensureHeaderInjected(){
 
   adminMenuToggle = document.querySelector('#admin-menu-toggle');
   if (!adminMenuToggle && header) {
-    const actionGroup = header.querySelector('[data-sign-out]')?.parentElement;
     if (actionGroup) {
       const mobileToggle = document.createElement('button');
       mobileToggle.id = 'admin-menu-toggle';
@@ -161,25 +180,13 @@ function ensureHeaderInjected(){
     adminNav.classList.add('lg:flex');
   }
 
-  // Add a mobile-only sign out link inside the nav to avoid duplicate sign-outs on desktop
-  if (adminNav && !adminNav.querySelector('[data-mobile-sign-out]')) {
-    const addMobileSignOut = () => {
-      // only add for small viewports
-      if (window.innerWidth < 1024) {
-        const mobileSign = document.createElement('a');
-        mobileSign.setAttribute('data-mobile-signout', '1');
-        mobileSign.setAttribute('data-sign-out', '');
-        mobileSign.className = 'mobile-nav-link rounded-md border border-white/30 px-4 py-3 text-left text-sm font-semibold text-white hover:bg-white/10';
-        mobileSign.textContent = 'Sign out';
-        adminNav.appendChild(mobileSign);
-        mobileSign.addEventListener('click', async () => { await supabase.auth.signOut(); location.assign('../index.html'); });
-      } else {
-        const existing = adminNav.querySelector('[data-mobile-signout]');
-        if (existing) existing.remove();
-      }
-    };
-    addMobileSignOut();
-    window.addEventListener('resize', addMobileSignOut);
+  if (adminNav && !adminNav.querySelector('.mobile-signout')) {
+    const mobileSignOut = document.createElement('button');
+    mobileSignOut.type = 'button';
+    mobileSignOut.className = 'mobile-signout mobile-nav-link mt-2 border border-white/30 text-sm font-semibold text-white hover:bg-white/10';
+    mobileSignOut.setAttribute('data-sign-out', '');
+    mobileSignOut.textContent = 'Sign out';
+    adminNav.appendChild(mobileSignOut);
   }
 }
 // Create overlay element for mobile nav if missing
@@ -201,50 +208,6 @@ window.addEventListener('resize', refreshHeaderHeight);
 window.addEventListener('DOMContentLoaded', refreshHeaderHeight, { once: true });
 refreshHeaderHeight();
 
-  // Ensure only one sign-out is visible on desktop, and mobile shows the sign-out inside the nav.
-  function normalizeSignOuts() {
-    const desktop = window.innerWidth >= 1024;
-    const headerSign = document.querySelector('.header-signout');
-    // collect all sign-out elements
-    const signs = Array.from(document.querySelectorAll('[data-sign-out]'));
-    signs.forEach(el => {
-      if (desktop) {
-        // only keep the header-signout visible
-        if (el.classList && el.classList.contains('header-signout')) {
-          el.classList.remove('hidden');
-          el.style.display = '';
-        } else {
-          el.classList.add('hidden');
-        }
-      } else {
-        // mobile: hide header signout and show signouts in nav
-        if (el.classList && el.classList.contains('header-signout')) {
-          el.classList.add('hidden');
-        } else {
-          el.classList.remove('hidden');
-          el.style.display = '';
-        }
-      }
-    });
-  }
-  window.addEventListener('resize', normalizeSignOuts);
-  window.addEventListener('DOMContentLoaded', normalizeSignOuts, { once: true });
-
-  // As a stronger measure, remove extra sign-out elements entirely so duplicates can't appear.
-  function dedupeSignOuts() {
-    const signs = Array.from(document.querySelectorAll('[data-sign-out]'));
-    if (signs.length <= 1) return;
-    const headerSign = document.querySelector('.header-signout');
-    const keeper = headerSign || signs[0];
-    signs.forEach(s => {
-      if (s !== keeper) {
-        s.remove();
-      }
-    });
-  }
-  window.addEventListener('DOMContentLoaded', dedupeSignOuts, { once: true });
-  // also run after header injection in case pages had their own sign-outs
-  dedupeSignOuts();
 function renderStudents() { const query=document.querySelector('#search').value.toLowerCase().trim(), filter=document.querySelector('#status-filter').value; const rows=students.filter((student)=>{const values=[student.full_name,student.email,student.phone,student.national_id,student.institution,student.course].join(' ').toLowerCase();return (!filter||student.status===filter)&&(!query||values.includes(query));}); table.innerHTML=rows.length?rows.map((student)=>{const docStatus=documentState(student.id);return `<tr class="cursor-pointer hover:bg-emerald-50/50" data-open="${student.id}"><td class="p-4"><div class="flex items-center gap-3"><span class="grid h-9 w-9 place-items-center rounded-full bg-emerald-100 text-xs font-bold text-county-green">${escapeHtml(student.full_name.split(' ').map(x=>x[0]).slice(0,2).join(''))}</span><span><span class="block font-semibold">${escapeHtml(student.full_name)}</span><span class="block text-xs text-slate-500">${escapeHtml(student.email)}</span></span></div></td><td class="p-4"><span class="block font-medium">${escapeHtml(student.institution||'—')}</span><span class="block text-xs text-slate-500">${escapeHtml(student.course||'Course not provided')}</span></td><td class="p-4"><span class="rounded-full px-2.5 py-1 text-xs font-bold ${badgeClass(docStatus)}">${docStatus==='missing'?'Missing':label(docStatus)}</span></td><td class="p-4"><select data-status="${student.id}" class="rounded-md border border-slate-300 bg-white p-2 text-xs">${statuses.map(s=>`<option value="${s}" ${student.status===s?'selected':''}>${label(s)}</option>`).join('')}</select></td><td class="p-4 text-slate-600">${new Date(student.created_at).toLocaleDateString()}</td><td class="p-4"><a href="student-details.html?id=${student.id}" class="font-bold text-county-green hover:underline">View profile</a></td></tr>`}).join(''):'<tr><td colspan="6" class="p-8 text-center text-slate-500">No students match these filters.</td></tr>'; table.querySelectorAll('[data-open]').forEach(row=>row.addEventListener('click',(event)=>{if(event.target.closest('select,a'))return;location.assign(`student-details.html?id=${row.dataset.open}`)})); table.querySelectorAll('[data-status]').forEach(select=>select.addEventListener('change',async()=>{const student=students.find(x=>x.id===select.dataset.status);const {error}=await supabase.from('profiles').update({status:select.value}).eq('id',student.id);if(error){showError('Could not update the application status.');select.value=student.status;return}student.status=select.value;renderStats();renderRecent()})); }
 function renderStats() { document.querySelector('#total-count').textContent=students.length; statuses.forEach(status=>{const target=document.querySelector(`#${status}-count`);if(target)target.textContent=students.filter(s=>s.status===status).length}); document.querySelector('#documents-count').textContent=[...documentsByStudent.values()].flat().filter(d=>d.review_status==='pending').length; }
 async function init(){const {data:{user}}=await supabase.auth.getUser();if(!user){location.replace('../login.html');return}const {data:staff,error:staffError}=await supabase.from('profiles').select('role').eq('id',user.id).single();if(staffError||!['hr_admin','super_admin'].includes(staff?.role)){location.replace('dashboard.html');return}

@@ -10,7 +10,7 @@ layoutStyles.textContent = `
   .nav-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.42); backdrop-filter: blur(6px); opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 50; }
   .nav-overlay.visible { opacity: 1; pointer-events: auto; }
   /* Ensure page content is pushed down by the fixed header so it doesn't appear underneath */
-  body > main { width: 100%; max-width: none !important; padding-top: var(--header-height, 72px); }
+  body > main { width: 100%; max-width: none !important; padding-top: calc(var(--header-height, 72px) + 1rem); }
   #stat-cards { width: 100%; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important; }
   #stat-cards > article { min-width: 0; }
   #student-index { min-width: 0; }
@@ -110,8 +110,9 @@ function renderRecent() { const root=document.querySelector('#recent-application
 
 // If pages don't include the full admin header, inject it so the hamburger and nav work everywhere.
 function ensureHeaderInjected(){
-  if (header) return;
-  const headerHtml = `
+  const needsInjectedHeader = !header;
+  if (needsInjectedHeader) {
+    const headerHtml = `
   <header class="site-header border-b border-emerald-900 bg-county-green text-white">
     <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
       <a href="../index.html" class="flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-full bg-white text-xs font-bold text-county-green">NC</span><span><span class="block font-bold">Narok County</span><span class="block text-xs text-emerald-100">Attachment Management System</span></span></a>
@@ -127,12 +128,41 @@ function ensureHeaderInjected(){
       <a class="py-3 text-emerald-100 hover:text-white" href="settings.html">Settings</a>
     </nav>
   </header>`;
-  document.body.insertAdjacentHTML('afterbegin', headerHtml);
-  header = document.querySelector('header.site-header');
+    document.body.insertAdjacentHTML('afterbegin', headerHtml);
+    header = document.querySelector('header.site-header');
+  }
+
   adminNav = document.querySelector('#admin-nav');
+  if (!adminNav && header) {
+    const existingNav = header.querySelector('nav');
+    if (existingNav) {
+      existingNav.id = 'admin-nav';
+      adminNav = existingNav;
+    }
+  }
+
   adminMenuToggle = document.querySelector('#admin-menu-toggle');
+  if (!adminMenuToggle && header) {
+    const actionGroup = header.querySelector('[data-sign-out]')?.parentElement;
+    if (actionGroup) {
+      const mobileToggle = document.createElement('button');
+      mobileToggle.id = 'admin-menu-toggle';
+      mobileToggle.setAttribute('aria-expanded', 'false');
+      mobileToggle.setAttribute('aria-controls', 'admin-nav');
+      mobileToggle.className = 'lg:hidden rounded-md border border-white/30 px-3 py-2 text-sm font-semibold hover:bg-white/10';
+      mobileToggle.textContent = '☰ Menu';
+      actionGroup.insertBefore(mobileToggle, actionGroup.firstChild);
+      adminMenuToggle = mobileToggle;
+    }
+  }
+
+  if (adminNav) {
+    adminNav.classList.add('hidden');
+    adminNav.classList.add('lg:flex');
+  }
+
   // Add a mobile-only sign out link inside the nav to avoid duplicate sign-outs on desktop
-  if (adminNav && !adminNav.querySelector('[data-mobile-signout]')) {
+  if (adminNav && !adminNav.querySelector('[data-mobile-sign-out]')) {
     const addMobileSignOut = () => {
       // only add for small viewports
       if (window.innerWidth < 1024) {
@@ -242,14 +272,11 @@ if (adminMenuToggle && adminNav) {
     const isOpen = adminNav.classList.toggle('mobile-open');
     adminNav.classList.toggle('hidden', !isOpen);
     adminMenuToggle.setAttribute('aria-expanded', String(isOpen));
-    // show overlay and prevent background scroll when open
     if (isOpen) {
       ensureOverlay();
       navOverlay.classList.add('visible');
       document.documentElement.style.overflow = 'hidden';
-      // ensure header visible
       header.classList.remove('header-hidden');
-      // refresh header height because opening the menu may change header dimensions
       refreshHeaderHeight();
     } else {
       navOverlay.classList.remove('visible');
@@ -257,30 +284,24 @@ if (adminMenuToggle && adminNav) {
     }
   });
 
-  adminNav.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
-    if (window.innerWidth < 1024) {
-      adminNav.classList.add('hidden');
-      adminNav.classList.remove('mobile-open');
-      adminMenuToggle.setAttribute('aria-expanded', 'false');
-      if (navOverlay) navOverlay.classList.remove('visible');
-      document.documentElement.style.overflow = '';
-    }
-  }));
-
-// Clicking the overlay closes the mobile nav
-if (navOverlay) {
-  navOverlay.addEventListener('click', () => {
+  const closeMobileNav = () => {
     adminNav.classList.remove('mobile-open');
     adminNav.classList.add('hidden');
-    navOverlay.classList.remove('visible');
     adminMenuToggle.setAttribute('aria-expanded', 'false');
+    if (navOverlay) navOverlay.classList.remove('visible');
     document.documentElement.style.overflow = '';
-  });
-}
+  };
+
+  adminNav.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
+    if (window.innerWidth < 1024) closeMobileNav();
+  }));
+
+  if (navOverlay) {
+    navOverlay.addEventListener('click', closeMobileNav);
+  }
 
   window.addEventListener('resize', updateNavVisibility);
   updateNavVisibility();
-  // No hide-on-scroll behavior: keep header fixed and visible at all times.
   refreshHeaderHeight();
 }
 document.querySelectorAll('[data-sign-out]').forEach(button=>button.addEventListener('click',async()=>{await supabase.auth.signOut();location.assign('../index.html')}));
